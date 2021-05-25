@@ -1,0 +1,81 @@
+server:
+  port: 8080
+
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+spring:
+  application:
+    name: apigateway-service
+
+
+  cloud:
+    gateway:
+      routes:
+        - id: korean-summarization
+          uri: lb://KOREAN-SUMMARIZATION-SERVICE
+          predicates:
+            - Path=/korean-summarization/**
+            - Method=POST,GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/korean-summarization/(?<segment>.*), /$\{segment}
+        - id: english-summarization
+          uri: lb://ENGLISH-SUMMARIZATION-SERVICE
+          predicates:
+            - Path=/english-summarization/**
+            - Method=POST,GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/english-summarization/(?<segment>.*), /$\{segment}
+        - id: bookmark-service
+          uri: lb://BOOKMARK-SERVICE
+          predicates:
+            - Path=/bookmark-service/bookmarks/**
+            - Method=POST,GET,DELETE
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/bookmark-service/(?<segment>.*), /$\{segment}
+            - AuthorizationFilter
+        - id: bookmark-service-login
+          uri: lb://BOOKMARK-SERVICE
+          predicates:
+            - Path=/bookmark-service/login
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/bookmark-service/(?<segment>.*), /$\{segment}
+        - id: bookmark-service-signup
+          uri: lb://BOOKMARK-SERVICE
+          predicates:
+            - Path=/bookmark-service/users/signup
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/bookmark-service/(?<segment>.*), /$\{segment}
+        - id: bookmark-service-checkId
+          uri: lb://BOOKMARK-SERVICE
+          predicates:
+            - Path=/bookmark-service/users/checkid/**
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/bookmark-service/(?<segment>.*), /$\{segment}
+        - id: bookmark-service-userserivce
+          uri: lb://BOOKMARK-SERVICE
+          predicates:
+            - Path=/bookmark-service/users/**
+            - Method=GET,DELETE
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/bookmark-service/(?<segment>.*), /$\{segment}
+            - AuthorizationFilter
+
+token:
+  expiration_time: 3600000
+  secret: user_token
